@@ -1,6 +1,6 @@
 # Film Library CI/CD (Azure DevOps).
-# Build and test on every PR; deploy main to Dev, then Test and Prod.
-# Approval gates live on the Azure DevOps environments filmlibrary-test and filmlibrary-prod (see pipelines/README.md).
+# Build and test on every PR; build main once and promote the same artifacts Dev -> UAT -> Prod.
+# Approval and exclusive-lock checks live on the Azure DevOps environments filmlibrary-uat and filmlibrary-prod (see pipelines/README.md).
 
 trigger:
   branches:
@@ -104,20 +104,35 @@ stages:
           environment: dev
           serviceConnection: $(azureServiceConnection)
 
-  - stage: Test
-    displayName: Deploy to Test
+  - stage: UAT
+    displayName: Deploy to UAT
     dependsOn: Dev
+    lockBehavior: runLatest # with the environment's exclusive lock, a newer run replaces older ones waiting for approval
     jobs:
       - template: pipelines/deploy.yml
         parameters:
-          environment: test
+          environment: uat
           serviceConnection: $(azureServiceConnection)
 
   - stage: Prod
     displayName: Deploy to Prod
-    dependsOn: Test
+    dependsOn: UAT
+    lockBehavior: runLatest
     jobs:
       - template: pipelines/deploy.yml
         parameters:
           environment: prod
           serviceConnection: $(azureServiceConnection)
+
+      - job: Tag
+        displayName: Tag the released commit
+        dependsOn: Deploy
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - checkout: self
+            persistCredentials: true # the build service needs "Create tag" on the repo (see pipelines/README.md)
+          - script: |
+              set -euo pipefail
+              git tag "prod-$(Build.BuildNumber)" "$(Build.SourceVersion)"
+              git push origin "prod-$(Build.BuildNumber)"
+            displayName: Tag prod-$(Build.BuildNumber)

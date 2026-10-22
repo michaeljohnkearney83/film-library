@@ -1,9 +1,9 @@
-// Film Library: one environment (dev, test or prod) in an existing resource group.
+// Film Library: one environment (dev, uat or prod) in an existing resource group.
 // Deploy: az deployment group create -g rg-filmlib-dev --parameters infra/env/dev.bicepparam
 targetScope = 'resourceGroup'
 
 @description('Environment name, used in resource names.')
-@allowed(['dev', 'test', 'prod'])
+@allowed(['dev', 'uat', 'prod'])
 param environmentName string
 
 @description('Region for everything except the Static Web App.')

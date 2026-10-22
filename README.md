@@ -57,4 +57,4 @@ cd src/web; npm test                      # React
 
 ## Deploy
 
-The pipeline deploys `main` to **Dev**, then to **Test** and **Prod** after approval. For one-time setup (service connection, variable groups, approvals and branch policies), see [pipelines/README.md](pipelines/README.md). To deploy by hand, see [infra/README.md](infra/README.md).
+The pipeline deploys `main` to **Dev**, then to **UAT** and **Prod** after approval; every change starts as a short-lived branch and a pull request. For one-time setup (service connection, variable groups, approvals and branch policies), see [pipelines/README.md](pipelines/README.md). To deploy by hand, see [infra/README.md](infra/README.md).

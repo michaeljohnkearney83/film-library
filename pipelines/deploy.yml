@@ -4,7 +4,7 @@
 parameters:
   - name: environment
     type: string
-    values: [dev, test, prod]
+    values: [dev, uat, prod]
   - name: serviceConnection
     type: string
   - name: location

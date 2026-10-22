@@ -34,6 +34,7 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 - **No secrets.** In Azure the API uses a user-assigned managed identity for Cosmos DB (data-plane RBAC; local auth is disabled), Key Vault and Storage. Only the local emulator uses a key, which is the well-known public emulator key.
 - **Failures become messages.** .NET services and `client.ts` turn network errors, timeouts and unreadable replies into one error type (`ApiError` in React). UI code shows them and never crashes. Requests the user cancelled (`AbortError`) are not errors.
 - **React async state.** Effects use an `AbortController`. Replies for a film the viewer has moved away from are ignored, and a test guards this. Don't call `setState` synchronously in an effect (the oxlint rule); derive state during render or set it in the event handler.
+- **Release flow.** Trunk-based: short-lived branch per user story → PR into `main` → one build promoted Dev → UAT → Prod (approvals on UAT and Prod). No environment branches; environments are `dev`, `uat` and `prod` everywhere (Bicep params, pipeline, variable groups). See `pipelines/README.md`.
 - **Runtime config.** The web build is environment-agnostic; `/config.json` is written per environment by the pipeline. Never bake environment URLs into the bundle.
 
 ## Gotchas
