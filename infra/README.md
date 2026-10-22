@@ -5,7 +5,7 @@
 | Resource | Purpose |
 |---|---|
 | User-assigned managed identity | The API's identity for Cosmos DB, Key Vault and Storage; no keys or connection strings |
-| App Service plan + Web App (Linux, .NET 10) | The API; health check on `/healthz` |
+| App Service plan + Web App (Linux, .NET 10) | The API; health check on `/healthz` on paid tiers. Dev uses the free F1 tier (cold starts, daily CPU limit); UAT and Prod use paid tiers, see [env/](env). The plan is the only resource with a fixed monthly cost |
 | Cosmos DB (serverless) | `filmlibrary` database with a `films` container; key access disabled; the identity has the data-plane *Built-in Data Contributor* role |
 | Key Vault (RBAC) | Holds the Application Insights connection string, read by the API through a Key Vault reference |
 | Storage account | Reserved for assets such as posters; shared-key access disabled |

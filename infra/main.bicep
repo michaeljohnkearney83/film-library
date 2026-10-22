@@ -222,7 +222,7 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       http20Enabled: true
-      healthCheckPath: '/healthz'
+      healthCheckPath: appServiceSku != 'F1' ? '/healthz' : null // App Service health checks need a paid tier; the pipeline still polls /healthz
       appSettings: [
         { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
         { name: 'Cosmos__Endpoint', value: cosmos.properties.documentEndpoint }

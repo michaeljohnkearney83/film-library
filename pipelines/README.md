@@ -25,6 +25,7 @@ Trunk-based: there are no long-lived `dev` or `uat` branches, and environments a
 
 Create the environments (step 4) **before** the first run; otherwise the pipeline creates them itself, without approvals.
 
+0. **Billing (free tier).** Organization settings → *Billing* → *Set up billing* → choose the Azure subscription. Microsoft-hosted agents only run once the organization is linked to a subscription; the free tier (one job at a time, up to 60 minutes per job, 1,800 minutes a month for private projects) then applies automatically. Linking costs nothing unless you buy more parallel jobs.
 1. **Repo.** Push this repository to Azure Repos, then create a pipeline from `azure-pipelines.yml`.
 2. **Service connection.** Project settings → Service connections → *Azure Resource Manager*, using *workload identity federation*, named `filmlibrary-azure`. Give it *Contributor* and *Role Based Access Control Administrator* on the subscription or on the `rg-filmlib-*` resource groups; Bicep creates role assignments, so it needs the second role.
 3. **Variable groups** (Pipelines → Library), one per environment: `filmlibrary-dev`, `filmlibrary-uat` and `filmlibrary-prod`:
