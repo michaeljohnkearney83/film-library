@@ -5,7 +5,7 @@ export interface AppConfig {
   entra: {
     /** The React app's (SPA) app registration client id. */
     clientId: string
-    /** External ID tenant authority, e.g. https://contoso.ciamlogin.com/ */
+    /** External ID tenant authority by tenant id: https://<tenant-id>.ciamlogin.com/<tenant-id> */
     authority: string
     /** The API's delegated scope, e.g. api://<api-client-id>/Films.Read */
     apiScope: string

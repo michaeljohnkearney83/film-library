@@ -20,7 +20,7 @@
    | `ENTRA_AUTHORITY` | `https://contoso.ciamlogin.com/<tenant-id>/v2.0` (the API trusts this) |
    | `ENTRA_API_CLIENT_ID` | API app registration client id |
    | `ENTRA_SPA_CLIENT_ID` | SPA app registration client id |
-   | `ENTRA_SPA_AUTHORITY` | `https://contoso.ciamlogin.com/` |
+   | `ENTRA_SPA_AUTHORITY` | `https://<tenant-id>.ciamlogin.com/<tenant-id>` (use the tenant id, not the subdomain) |
    | `ENTRA_API_SCOPE` | `api://<api-client-id>/Films.Read` |
 
 4. **Environments** (Pipelines → Environments): `filmlibrary-dev`, `filmlibrary-test` and `filmlibrary-prod`. Add an **Approvals** check to *test* and *prod*.

@@ -30,7 +30,7 @@ Settings are read at runtime from `/config.json`, so one build can be deployed t
 |---|---|
 | `apiBaseUrl` | The API's address |
 | `entra.clientId` | SPA app registration client id |
-| `entra.authority` | `https://<tenant>.ciamlogin.com/` |
+| `entra.authority` | `https://<tenant-id>.ciamlogin.com/<tenant-id>` (tenant id, not the subdomain) |
 | `entra.apiScope` | `api://<api-client-id>/Films.Read` |
 
 ## Structure
