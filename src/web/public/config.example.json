@@ -1,0 +1,8 @@
+{
+  "apiBaseUrl": "http://localhost:5080",
+  "entra": {
+    "clientId": "YOUR-SPA-CLIENT-ID",
+    "authority": "https://YOUR-TENANT.ciamlogin.com/",
+    "apiScope": "api://YOUR-API-CLIENT-ID/Films.Read"
+  }
+}

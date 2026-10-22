@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Film Library API",
+    "description": "Film Library API. The single source of truth for the contract between the .NET API and the React app.\nEvery route requires a Microsoft Entra External ID access token with the `Films.Read` scope.",
+    "version": "0.0.0"
+  },
+  "tags": [
+    {
+      "name": "Films"
+    }
+  ],
+  "paths": {
+    "/api/films": {
+      "get": {
+        "operationId": "listFilms",
+        "description": "Every film, flagged with whether the caller may view it.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FilmSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized."
+          }
+        },
+        "tags": [
+          "Films"
+        ]
+      }
+    },
+    "/api/films/{id}": {
+      "get": {
+        "operationId": "getFilm",
+        "description": "One film's full content.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilmDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized."
+          },
+          "403": {
+            "description": "The viewer is too young for the film's rating.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The server cannot find the requested resource."
+          }
+        },
+        "tags": [
+          "Films"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "FilmDetails": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "year",
+          "genre",
+          "rating",
+          "director",
+          "synopsis"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Rating"
+          },
+          "director": {
+            "type": "string"
+          },
+          "synopsis": {
+            "type": "string"
+          }
+        },
+        "description": "Full film content. Only returned to viewers old enough for its rating."
+      },
+      "FilmSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "year",
+          "genre",
+          "rating",
+          "canView"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Rating"
+          },
+          "canView": {
+            "type": "boolean",
+            "description": "Whether the signed-in viewer is old enough to open the film's details. Decided by the API."
+          }
+        },
+        "description": "A film as shown in the list."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable reason, e.g. \"You must be 18 or over to view this film.\""
+          }
+        },
+        "description": "RFC 9457 problem details, as returned by ASP.NET Core."
+      },
+      "Rating": {
+        "type": "string",
+        "enum": [
+          "U",
+          "PG",
+          "12A",
+          "12",
+          "15",
+          "18"
+        ],
+        "description": "UK (BBFC) certificate. 12A counts as 12, because the app has no notion of \"accompanied by an adult\"."
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "Bearer"
+      }
+    }
+  }
+}

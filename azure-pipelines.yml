@@ -1,0 +1,123 @@
+# Film Library CI/CD (Azure DevOps).
+# Build and test on every PR; deploy main to Dev, then Test and Prod.
+# Approval gates live on the Azure DevOps environments filmlibrary-test and filmlibrary-prod (see pipelines/README.md).
+
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+variables:
+  dotnetVersion: '10.0.x'
+  nodeVersion: '24.x'
+  # Name of the Azure Resource Manager service connection (workload identity federation).
+  azureServiceConnection: 'filmlibrary-azure'
+
+resources:
+  containers:
+    - container: cosmos
+      image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+      ports:
+        - 8081:8081
+
+stages:
+  - stage: Build
+    displayName: Build and test
+    jobs:
+      - job: Contract
+        displayName: TypeSpec contract
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: $(nodeVersion) }
+          - script: npm ci && npm run build
+            workingDirectory: api-spec
+            displayName: Compile TypeSpec and generate the React client types
+          - script: git diff --exit-code -- api-spec/generated src/web/src/api/schema.d.ts
+            displayName: Fail if generated contract files weren't committed
+
+      - job: Api
+        displayName: .NET API
+        pool: { vmImage: ubuntu-latest }
+        services:
+          cosmos: cosmos
+        steps:
+          - task: UseDotNet@2
+            inputs: { version: $(dotnetVersion) }
+          - script: |
+              for i in $(seq 1 30); do curl -s -o /dev/null http://localhost:8081/ && exit 0; sleep 2; done
+              echo "Cosmos DB emulator didn't start"; exit 1
+            displayName: Wait for the Cosmos DB emulator
+          - script: dotnet test FilmLibrary.slnx --configuration Release --logger trx --results-directory $(Agent.TempDirectory)/tests
+            displayName: Build and test (including Cosmos integration tests)
+            env:
+              COSMOS_EMULATOR_ENDPOINT: http://localhost:8081/
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: $(Agent.TempDirectory)/tests/*.trx
+          - script: dotnet publish src/FilmLibrary.Api --configuration Release --output $(Build.ArtifactStagingDirectory)/api
+            displayName: Publish API
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/api
+              includeRootFolder: false
+              archiveFile: $(Build.ArtifactStagingDirectory)/api.zip
+          - publish: $(Build.ArtifactStagingDirectory)/api.zip
+            artifact: api
+
+      - job: Web
+        displayName: React app
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: $(nodeVersion) }
+          - script: npm ci
+            workingDirectory: src/web
+            displayName: Install
+          - script: npm run lint && npm test && npm run build
+            workingDirectory: src/web
+            displayName: Lint, test and build
+          - publish: src/web/dist
+            artifact: web
+
+      - job: Infra
+        displayName: Bicep
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - script: az bicep build --file infra/main.bicep --stdout > /dev/null
+            displayName: Validate Bicep
+          - publish: infra
+            artifact: infra
+
+  - stage: Dev
+    displayName: Deploy to Dev
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - template: pipelines/deploy.yml
+        parameters:
+          environment: dev
+          serviceConnection: $(azureServiceConnection)
+
+  - stage: Test
+    displayName: Deploy to Test
+    dependsOn: Dev
+    jobs:
+      - template: pipelines/deploy.yml
+        parameters:
+          environment: test
+          serviceConnection: $(azureServiceConnection)
+
+  - stage: Prod
+    displayName: Deploy to Prod
+    dependsOn: Test
+    jobs:
+      - template: pipelines/deploy.yml
+        parameters:
+          environment: prod
+          serviceConnection: $(azureServiceConnection)

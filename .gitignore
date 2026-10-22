@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Node
+node_modules/
+dist/
+
+# Per-environment React settings (copy src/web/public/config.example.json)
+src/web/public/config.json
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/

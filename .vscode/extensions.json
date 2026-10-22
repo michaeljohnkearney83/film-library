@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "typespec.typespec-vscode",
+    "ms-azuretools.vscode-bicep",
+    "ms-azure-devops.azure-pipelines",
+    "ms-azuretools.vscode-containers"
+  ]
+}
