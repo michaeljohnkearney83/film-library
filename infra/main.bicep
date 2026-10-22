@@ -9,6 +9,9 @@ param environmentName string
 @description('Region for everything except the Static Web App.')
 param location string = resourceGroup().location
 
+@description('Region for Cosmos DB. Cosmos capacity for new accounts varies by region, separately from App Service quota.')
+param cosmosLocation string = location
+
 @description('Static Web Apps are only offered in some regions.')
 @allowed(['westeurope', 'eastus2', 'centralus', 'westus2', 'eastasia'])
 param staticWebAppLocation string = 'eastus2'
@@ -136,12 +139,12 @@ resource identityUsesStorage 'Microsoft.Authorization/roleAssignments@2022-04-01
 // ---------------------------------------------------------------------------
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: 'cosmos-filmlib-${environmentName}-${suffix}'
-  location: location
+  location: cosmosLocation
   tags: tags
   kind: 'GlobalDocumentDB'
   properties: {
     databaseAccountOfferType: 'Standard'
-    locations: [{ locationName: location, failoverPriority: 0 }]
+    locations: [{ locationName: cosmosLocation, failoverPriority: 0 }]
     capabilities: [{ name: 'EnableServerless' }]
     consistencyPolicy: { defaultConsistencyLevel: 'Session' }
     disableLocalAuth: true

@@ -1,6 +1,6 @@
 # infra (Bicep)
 
-[main.bicep](main.bicep) defines one environment inside an existing resource group. Parameters per environment are in [env/](env). Resources go in the resource group's region unless the environment sets `location` (Dev and UAT use UK West, where the subscription has App Service quota). Before a run, `az deployment group validate --resource-group <rg> --parameters infra/env/<env>.bicepparam` catches region and quota problems.
+[main.bicep](main.bicep) defines one environment inside an existing resource group. Parameters per environment are in [env/](env). Resources go in the resource group's region unless the environment sets `location` and `cosmosLocation` (Dev and UAT: App Service and the rest in UK West, where the subscription has App Service quota; Cosmos DB in UK South, because UK West had no Cosmos capacity). Before a run, `az deployment group validate --resource-group <rg> --parameters infra/env/<env>.bicepparam` catches region and quota problems.
 
 | Resource | Purpose |
 |---|---|
