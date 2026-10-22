@@ -11,7 +11,7 @@ param location string = resourceGroup().location
 
 @description('Static Web Apps are only offered in some regions.')
 @allowed(['westeurope', 'eastus2', 'centralus', 'westus2', 'eastasia'])
-param staticWebAppLocation string = 'westeurope'
+param staticWebAppLocation string = 'eastus2'
 
 @description('Entra External ID authority the API trusts, e.g. https://contoso.ciamlogin.com/<tenant-id>/v2.0')
 param entraAuthority string
