@@ -1,7 +1,7 @@
 /*
  * Custom CSS for the Entra External ID sign-in page, so it matches the React app (src/web/src/index.css).
  * Upload in Entra admin center → Company branding → Default sign-in → Layout → Custom CSS (max 25 KB).
- * Only Microsoft's documented .ext-* classes are supported; see docs/entra-setup.md step 6.
+ * Only Microsoft's .ext-* classes are styled; see docs/entra-setup.md step 6.
  */
 
 body,
@@ -10,30 +10,44 @@ body,
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Blue bar with the white logo (Header → Logo). */
 .ext-header {
   background: #3b5bdb;
+  box-shadow: 0 1px 0 rgba(28, 28, 34, 0.08);
 }
 
+/* Sign-in card. */
 .ext-sign-in-box {
   background: #ffffff;
   border: 1px solid #e2e2e8;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(28, 28, 34, 0.08);
+  overflow: hidden;
 }
 
 .ext-title {
   color: #1c1c22;
+  font-size: 1.75rem;
   font-weight: 600;
 }
 
-.ext-subtitle,
-.ext-boilerplate-text {
+.ext-header-description,
+.ext-subtitle {
   color: #5d5d6b;
 }
 
+/* Inputs: full rounded border instead of Microsoft's underline. */
 .ext-input.ext-text-box {
   border: 1px solid #e2e2e8;
   border-radius: 6px;
+  padding: 8px 12px;
+  height: auto;
+  color: #1c1c22;
+  background: #ffffff;
+}
+
+.ext-input.ext-text-box:hover {
+  border-color: #c9c9d3;
 }
 
 .ext-input.ext-text-box:focus {
@@ -42,11 +56,13 @@ body,
   outline-offset: 1px;
 }
 
+/* Buttons. */
 .ext-button.ext-primary {
   background: #3b5bdb;
-  border-color: #3b5bdb;
+  border: 1px solid #3b5bdb;
   color: #ffffff;
   border-radius: 6px;
+  font-weight: 600;
 }
 
 .ext-button.ext-primary:hover,
@@ -62,11 +78,35 @@ body,
   border-radius: 6px;
 }
 
+/* Links ("No account? Create one", "Forgot password?"). */
+a,
+.ext-link {
+  color: #3b5bdb;
+}
+
+a:hover,
+.ext-link:hover {
+  color: #2f4ac0;
+  text-decoration: underline;
+}
+
 .ext-error {
   color: #b42318;
 }
 
-a,
-.ext-footer-links a {
-  color: #3b5bdb;
+/* Sign-in page text panel at the bottom of the card. */
+.ext-boilerplate-text {
+  background: #f6f6f8;
+  border-top: 1px solid #e2e2e8;
+  color: #5d5d6b;
+  font-size: 0.875rem;
+}
+
+/*
+ * Footer: blue bar to match the header. Entra drops custom rules for the footer links themselves
+ * (they stay white), so the bar must stay dark enough for white text.
+ */
+.ext-footer,
+.ext-footer.ext-has-background {
+  background: #3b5bdb;
 }

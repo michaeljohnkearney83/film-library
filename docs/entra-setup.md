@@ -107,10 +107,12 @@ The sign-in page stays Microsoft-hosted (passwords never reach the app), but is 
 | Layout | Template | Full-screen background |
 | Layout | Show header / Show footer | On / On |
 | Layout | Custom CSS | upload [branding/sign-in.css](branding/sign-in.css) |
+| Header | Logo | upload [branding/header-logo.png](branding/header-logo.png) (white, for the blue bar) |
+| Sign-in form | Banner logo | upload [branding/banner-logo.png](branding/banner-logo.png) (replaces the "FILM LIBRARY" text on the card) |
 | Sign-in form | Username hint text | `Email address` |
 | Sign-in form | Sign-in page text | `Films are shown according to your age and their UK BBFC rating.` |
 
-Changes can take a few minutes to appear. The CSS only uses Microsoft's documented `.ext-*` classes; colours mirror `src/web/src/index.css`.
+Changes can take a few minutes to appear. The CSS only uses Microsoft's `.ext-*` classes; colours mirror `src/web/src/index.css`. Entra silently drops rules it doesn't accept (the footer link colour, for example), so check the live page after each upload; injecting the CSS locally in a browser won't show which rules were dropped.
 
 ## Settings
 
