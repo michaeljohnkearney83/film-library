@@ -35,8 +35,10 @@ public static class TelemetrySetup
 
         if (!string.IsNullOrEmpty(configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
         {
-            // The distro adds ASP.NET Core, HttpClient and log collection, plus live metrics.
-            telemetry.UseAzureMonitor();
+            // The distro adds ASP.NET Core, HttpClient and log collection, plus live metrics. Its App Service detector
+            // renames the service after the site (WEBSITE_SITE_NAME), so set the name again afterwards: the last one wins.
+            telemetry.UseAzureMonitor()
+                .ConfigureResource(resource => resource.AddService(ServiceName, autoGenerateServiceInstanceId: false)); // keep App Service's instance
         }
         else if (!string.IsNullOrEmpty(configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
         {

@@ -13,6 +13,7 @@ dotnet test FilmLibrary.slnx
 | `AgeRulesTests` | Minimum age per rating; age from the birthdate claim, including birthdays falling today or tomorrow and midnight UK time; the configurable claim name; missing or invalid dates; scope matching |
 | `FilmEndpointsTests` | The API run in memory: 401 without a token, 403 without `Films.Read`, the health check, lock flags, 200/403 for each age and rating, problem details, ratings serialized as text, 404 |
 | `ObservabilityTests` | The `filmlibrary.film.views` metric for each outcome and rating, and that it never carries the birthdate or film id; readiness (200 or 503 depending on the film store) and liveness; certificate text matching the JSON |
+| `TelemetrySetupTests` | On App Service (simulated with its environment variables) the API still reports as `FilmLibrary.Api` |
 | `ContractTests` | The API's own OpenAPI against the TypeSpec output (`api-spec/generated/openapi.json`): operations, response codes, fields and types, required fields, `Rating` values |
 | `CosmosFilmRepositoryTests` | The real repository and seeder against the **Cosmos DB emulator**: seeding, ordering, field round-trips, not-found, not re-seeding |
 | `DeploymentDependencyTests` | The API's own dependency manifest, not the test project's, includes `Newtonsoft.Json`, which the Cosmos SDK loads at runtime |
