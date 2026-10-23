@@ -1,0 +1,82 @@
+/* Film Library colours, mirroring src/web/src/index.css. Layered over keycloak.v2's PatternFly 5 styles. */
+:root {
+  --fl-bg: #f6f6f8;
+  --fl-surface: #ffffff;
+  --fl-text: #1c1c22;
+  --fl-muted: #5d5d6b;
+  --fl-border: #e2e2e8;
+  --fl-accent: #3b5bdb;
+  --fl-accent-hover: #2f4ac0;
+
+  --pf-v5-global--primary-color--100: var(--fl-accent);
+  --pf-v5-global--primary-color--200: var(--fl-accent-hover);
+  --pf-v5-global--link--Color: var(--fl-accent);
+  --pf-v5-global--link--Color--hover: var(--fl-accent-hover);
+  --pf-v5-global--FontFamily--text: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --pf-v5-global--FontFamily--heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --pf-v5-global--Color--100: var(--fl-text);
+  --pf-v5-global--Color--200: var(--fl-muted);
+}
+
+html.login-pf,
+.login-pf body,
+.pf-v5-c-login {
+  background: var(--fl-bg) !important;
+  background-image: none !important;
+}
+
+/* Blue bar across the top with the logo, like the app's header. */
+.pf-v5-c-login::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 56px;
+  background: var(--fl-accent);
+}
+
+/* Replace the realm name text with the Film Library logo. */
+#kc-header-wrapper {
+  font-size: 0;
+  height: 36px;
+  width: 245px;
+  margin: 0 auto;
+  background: url('../img/logo.png') no-repeat center / contain;
+}
+
+/* The card. keycloak.v2 puts a thick PatternFly-blue line on top of the card header; drop it. */
+.pf-v5-c-login__main-header {
+  border-top: none;
+}
+
+.pf-v5-c-login__main {
+  background: var(--fl-surface);
+  border: 1px solid var(--fl-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 28, 34, 0.08);
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title {
+  color: var(--fl-text);
+  font-weight: 600;
+}
+
+.pf-v5-c-form-control {
+  border-radius: 6px;
+}
+
+.pf-v5-c-form-control:focus-within {
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--fl-accent);
+  outline: 2px solid var(--fl-accent);
+  outline-offset: 1px;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.pf-v5-c-login__main-footer-band {
+  border-top: 1px solid var(--fl-border);
+  background: var(--fl-bg);
+  border-radius: 0 0 12px 12px;
+}

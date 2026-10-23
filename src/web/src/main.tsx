@@ -1,9 +1,8 @@
-import { MsalProvider } from '@azure/msal-react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createFilmsApi } from './api/client'
 import App from './App'
-import { accessTokenProvider, createMsal } from './auth/msal'
+import { accessTokenProvider, completeSignIn, createSignInClient, displayName } from './auth/oidc'
 import { loadConfig } from './config'
 import './index.css'
 
@@ -12,14 +11,19 @@ const root = createRoot(document.getElementById('root')!)
 async function start() {
   try {
     const config = await loadConfig()
-    const msal = await createMsal(config.entra)
-    const api = createFilmsApi(config.apiBaseUrl, accessTokenProvider(msal, config.entra.apiScope))
+    const signIn = createSignInClient(config.auth)
+    const { user, error } = await completeSignIn(signIn)
+    const api = createFilmsApi(config.apiBaseUrl, accessTokenProvider(signIn))
 
     root.render(
       <StrictMode>
-        <MsalProvider instance={msal}>
-          <App api={api} apiScope={config.entra.apiScope} />
-        </MsalProvider>
+        <App
+          api={api}
+          user={user ? { name: displayName(user) } : null}
+          signInError={error}
+          onSignIn={() => signIn.signinRedirect()}
+          onSignOut={() => void signIn.signoutRedirect()}
+        />
       </StrictMode>,
     )
   } catch (error) {

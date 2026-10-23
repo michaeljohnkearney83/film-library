@@ -39,11 +39,12 @@ Create the environments (step 4) **before** the first run; otherwise the pipelin
 
    | Variable | Example |
    |---|---|
-   | `ENTRA_AUTHORITY` | `https://contoso.ciamlogin.com/<tenant-id>/v2.0` (the API trusts this) |
+   | `ENTRA_AUTHORITY` | `https://contoso.ciamlogin.com/<tenant-id>/v2.0`: the API trusts it and the React app signs in with it |
    | `ENTRA_API_CLIENT_ID` | API app registration client id |
    | `ENTRA_SPA_CLIENT_ID` | SPA app registration client id |
-   | `ENTRA_SPA_AUTHORITY` | `https://<tenant-id>.ciamlogin.com/<tenant-id>` (use the tenant id, not the subdomain) |
    | `ENTRA_API_SCOPE` | `api://<api-client-id>/Films.Read` |
+
+   An older `ENTRA_SPA_AUTHORITY` variable is no longer used and can be deleted.
 
    Dev and UAT can use the non-production External ID tenant; Prod should have its own tenant, so test accounts never sit beside real customers.
 

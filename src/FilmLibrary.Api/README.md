@@ -9,6 +9,8 @@ docker compose up -d                          # from the repo root: Cosmos DB em
 dotnet run --project src/FilmLibrary.Api      # http://localhost:5080
 ```
 
+To accept tokens from the local Keycloak instead of Entra, use `dotnet run --project src/FilmLibrary.Api --launch-profile keycloak` (see [keycloak/README.md](../../keycloak/README.md)).
+
 In Development, the API connects to the emulator, creates the `filmlibrary` database and `films` container, and seeds the sample films if the container is empty. It serves its OpenAPI document at `/openapi/v1.json`.
 
 ## Endpoints
@@ -36,10 +38,11 @@ A missing or invalid birthdate means U and PG only. The logic is in `Films/Ratin
 
 | Key | Meaning |
 |---|---|
-| `Entra:Authority` | External ID authority, e.g. `https://contoso.ciamlogin.com/<tenant-id>/v2.0` |
-| `Entra:Audience` | API app registration client id |
-| `Entra:RequiredScope` | Default `Films.Read` |
+| `Entra:Authority` | OpenID Connect authority whose tokens are accepted, e.g. `https://contoso.ciamlogin.com/<tenant-id>/v2.0` (or the local Keycloak realm) |
+| `Entra:Audience` | Expected token audience: the API app registration client id (`film-library-api` for Keycloak) |
+| `Entra:RequiredScope` | Default `Films.Read`, read from the `scp` claim |
 | `Entra:BirthdateClaim` | Token claim with the date of birth; default `birthdate` |
+| `Entra:RequireHttpsMetadata` | Default `true`. Only the local Keycloak profile turns it off (http) |
 | `Cosmos:Endpoint` / `Database` / `FilmsContainer` | Cosmos DB location |
 | `Cosmos:Key` | **Emulator only.** Leave empty in Azure |
 | `Cosmos:ManagedIdentityClientId` | User-assigned identity used in Azure; if empty, `DefaultAzureCredential` is used (e.g. `az login`) |
@@ -53,7 +56,7 @@ In Azure, Bicep sets all of these as App Service settings ([infra/main.bicep](..
 
 ```
 Program.cs          Wiring: auth, Cosmos DB, CORS, OpenAPI, telemetry, endpoints
-Auth/EntraAuth.cs   JWT bearer and the Films.Read scope policy
+Auth/EntraAuth.cs   JWT bearer (any OpenID Connect provider; Entra in Azure) and the Films.Read scope policy
 Data/Cosmos.cs      Cosmos client (key for the emulator, managed identity in Azure) and the sample-data seeder
 Films/              Rating, age rules, the repository, endpoints and sample data
 ```

@@ -18,6 +18,9 @@ public sealed class EntraOptions
 
     /// <summary>Token claim holding the user's date of birth (yyyy-MM-dd). Mapped from a custom user attribute in Entra.</summary>
     public string BirthdateClaim { get; set; } = "birthdate";
+
+    /// <summary>Only turn off for a local http provider (the Keycloak in docker-compose). Azure always uses https.</summary>
+    public bool RequireHttpsMetadata { get; set; } = true;
 }
 
 public static class AuthPolicies
@@ -34,6 +37,7 @@ public static class AuthPolicies
             {
                 options.Authority = entra.Authority;
                 options.Audience = entra.Audience;
+                options.RequireHttpsMetadata = entra.RequireHttpsMetadata;
                 options.MapInboundClaims = false; // keep Entra's claim names, e.g. "scp" and the birthdate claim
             });
 

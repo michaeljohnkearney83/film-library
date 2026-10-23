@@ -4,13 +4,14 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 
 ## Layout
 
-`api-spec/` (TypeSpec contract) · `src/FilmLibrary.Api/` (minimal API) · `src/web/` (React + Vite + TS) · `tests/FilmLibrary.Api.Tests/` · `infra/` (Bicep) · `azure-pipelines.yml` + `pipelines/` · `docs/entra-setup.md`
+`api-spec/` (TypeSpec contract) · `src/FilmLibrary.Api/` (minimal API) · `src/web/` (React + Vite + TS) · `tests/FilmLibrary.Api.Tests/` · `infra/` (Bicep) · `azure-pipelines.yml` + `pipelines/` · `docs/entra-setup.md` · `keycloak/` (optional local sign-in)
 
 ## Commands
 
 - Contract: `npm run build` in `api-spec` regenerates `api-spec/generated/openapi.json` **and** `src/web/src/api/schema.d.ts`.
 - API: `dotnet run --project src/FilmLibrary.Api` (http://localhost:5080); `dotnet test FilmLibrary.slnx`.
-- Cosmos emulator: `docker compose up -d`; set `COSMOS_EMULATOR_ENDPOINT=http://localhost:8081/` to run the Cosmos integration tests (they're skipped otherwise).
+- Local Keycloak instead of Entra: `docker compose up -d`, `dotnet run --project src/FilmLibrary.Api --launch-profile keycloak`, copy `keycloak/config.json` to `src/web/public/config.json` (see `keycloak/README.md`).
+- Cosmos emulator: `docker compose up -d cosmos`; set `COSMOS_EMULATOR_ENDPOINT=http://localhost:8081/` to run the Cosmos integration tests (they're skipped otherwise).
 - Web: in `src/web`: `npm run dev`, `npm test`, `npm run lint`, `npm run build` (runs `tsc -b`).
 - Bicep: `az bicep build --file infra/main.bicep` (or a standalone `bicep build`).
 
@@ -30,7 +31,7 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 
 - **TypeSpec is the contract.** Change `api-spec/main.tsp` first, regenerate, then make C# match; `ContractTests` compare the API's own OpenAPI with the TypeSpec output. Never hand-edit `generated/` or `schema.d.ts`. React gets types only from `schema.d.ts` via `src/web/src/api/client.ts`.
 - **The server enforces age.** Age comes from the token's birthdate claim (`Entra:BirthdateClaim`, yyyy-MM-dd), calculated in UK time (`Viewer.cs`). 12A counts as 12. A missing or invalid birthdate means U/PG only. The client only displays `canView` and the 403 message.
-- **Auth.** JWT bearer from Entra External ID; every film route requires the `Films.Read` scope (`AuthPolicies.FilmsRead`). The React app uses MSAL redirects; tokens refresh silently via `acquireTokenSilent`.
+- **Auth.** OpenID Connect, provider-neutral: Entra External ID in Azure, optionally Keycloak locally (`keycloak/`). The API validates JWTs from `Entra:Authority` (the section name stays `Entra` for either provider); every film route requires the `Films.Read` scope in `scp` (`AuthPolicies.FilmsRead`). The React app uses `oidc-client-ts` (`src/auth/oidc.ts`): redirect with code + PKCE, access tokens renewed with the refresh token, falling back to a redirect. Don't add provider-specific code to the React app; differences belong in `config.json`.
 - **No secrets.** In Azure the API uses a user-assigned managed identity for Cosmos DB (data-plane RBAC; local auth is disabled), Key Vault and Storage. Only the local emulator uses a key, which is the well-known public emulator key.
 - **Failures become messages.** .NET services and `client.ts` turn network errors, timeouts and unreadable replies into one error type (`ApiError` in React). UI code shows them and never crashes. Requests the user cancelled (`AbortError`) are not errors.
 - **React async state.** Effects use an `AbortController`. Replies for a film the viewer has moved away from are ignored, and a test guards this. Don't call `setState` synchronously in an effect (the oxlint rule); derive state during render or set it in the event handler.
@@ -45,5 +46,6 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 - Static Web Apps only exist in a few regions, and West Europe refuses new (e.g. free-trial) subscriptions with `RequestDisallowedByAzure`, so `staticWebAppLocation` defaults to `eastus2`. The site is served from the global edge either way. Check a region with `az deployment group validate` before a run.
 - App Service quota differs by region per subscription: the current free-trial subscription has none in UK South, so Dev and UAT set `location = 'ukwest'` in their `.bicepparam` (the resource groups themselves stay in UK South; that's only metadata). `az deployment group validate` reports `SubscriptionIsOverQuotaForSku` once `Microsoft.Web` is registered. Cosmos DB capacity is separate and only shows up at creation (`ServiceUnavailable`, "high demand"): UK West refused it, so `cosmosLocation = 'uksouth'`. A Cosmos account can't change region; a failed one must be deleted before retrying elsewhere.
 - With managed identity, the API can't create Cosmos databases or containers; Bicep creates them. The seeder only creates them when using the emulator key.
-- The web app's Entra authority must use the tenant id (`https://<tenant-id>.ciamlogin.com/<tenant-id>`), not the subdomain. External ID metadata names its issuer by tenant id, and MSAL's issuer check rejects that for a subdomain authority with `endpoints_resolution_error`. The API's authority can use either form.
+- MSAL was replaced by `oidc-client-ts` because MSAL refuses any non-https authority (no localhost exception), so it can't use a local Keycloak; MSAL's issuer check also forced the tenant-id form of the Entra authority. With `oidc-client-ts`, the web app and API share one authority, `https://<subdomain>.ciamlogin.com/<tenant-id>/v2.0` (`ENTRA_AUTHORITY`), and the login page shows the readable subdomain.
+- Keycloak (docker-compose) runs on port 8180, because 8080 is often taken. Realm changes need `docker compose up -d --force-recreate keycloak`; a restart keeps the old realm. Its `Films.Read` client scope adds a hard-coded `scp` claim and the `film-library-api` audience so tokens match Entra's shape. The API's `keycloak` launch profile sets `Entra:RequireHttpsMetadata=false`.
 - The birthdate reaches the access token through a Graph claims mapping policy on the API's service principal, plus `acceptMappedClaims` on the API app (`docs/entra-setup.md` step 4). User flows and custom attributes can't be managed with Azure CLI's token; they're set up in the portal. Sign-in page branding is portal-only too (Graph's branding API rejects personal Microsoft accounts); the CSS lives in `docs/branding/sign-in.css`.

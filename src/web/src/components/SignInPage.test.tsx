@@ -27,6 +27,12 @@ describe('SignInPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent("Sign-in couldn't start: endpoints_resolution_error")
   })
 
+  it('shows why the last sign-in redirect failed', () => {
+    render(<SignInPage onSignIn={vi.fn(async () => {})} initialError="access_denied" />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent("Sign-in didn't finish: access_denied")
+  })
+
   it('clears the message when the viewer tries again', async () => {
     const onSignIn = vi
       .fn<() => Promise<void>>()

@@ -2,13 +2,17 @@
 export interface AppConfig {
   /** Base URL of the Film Library API, e.g. https://app-filmlib-dev.azurewebsites.net */
   apiBaseUrl: string
-  entra: {
-    /** The React app's (SPA) app registration client id. */
-    clientId: string
-    /** External ID tenant authority by tenant id: https://<tenant-id>.ciamlogin.com/<tenant-id> */
+  /** OpenID Connect sign-in: Entra External ID in Azure, or the local Keycloak from docker-compose. */
+  auth: {
+    /**
+     * The provider's authority (its metadata is at <authority>/.well-known/openid-configuration), e.g.
+     * Entra: https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0 · Keycloak: http://localhost:8180/realms/filmlibrary
+     */
     authority: string
-    /** The API's delegated scope, e.g. api://<api-client-id>/Films.Read */
-    apiScope: string
+    /** The React app's client id at the provider. */
+    clientId: string
+    /** Scopes to request besides openid and profile: the API scope, plus offline_access on Entra for refresh tokens. */
+    scope: string
   }
 }
 
@@ -16,5 +20,10 @@ export async function loadConfig(fetchImpl: typeof fetch = fetch): Promise<AppCo
   const response = await fetchImpl('/config.json', { cache: 'no-store' })
   if (!response.ok)
     throw new Error(`Couldn't load /config.json (${response.status}). Copy public/config.example.json to public/config.json.`)
-  return (await response.json()) as AppConfig
+
+  const config = (await response.json()) as Partial<AppConfig>
+  const { authority, clientId, scope } = config.auth ?? {}
+  if (!config.apiBaseUrl || !authority || !clientId || !scope)
+    throw new Error('/config.json needs apiBaseUrl and auth.authority, auth.clientId and auth.scope. See public/config.example.json.')
+  return config as AppConfig
 }

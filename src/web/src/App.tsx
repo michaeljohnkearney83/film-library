@@ -1,20 +1,21 @@
-import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react'
 import type { FilmsApi } from './api/client'
 import { FilmsPage } from './components/FilmsPage'
 import { SignInPage } from './components/SignInPage'
 
-export default function App({ api, apiScope }: { api: FilmsApi; apiScope: string }) {
-  const { instance, accounts } = useMsal()
-  const account = instance.getActiveAccount() ?? accounts[0]
+interface Props {
+  api: FilmsApi
+  /** The signed-in user, or null when nobody is signed in. */
+  user: { name: string } | null
+  /** Why the last sign-in redirect failed, if it did. */
+  signInError?: string
+  onSignIn: () => Promise<void>
+  onSignOut: () => void
+}
 
-  return (
-    <>
-      <AuthenticatedTemplate>
-        <FilmsPage api={api} userName={account?.name ?? account?.username ?? ''} onSignOut={() => instance.logoutRedirect()} />
-      </AuthenticatedTemplate>
-      <UnauthenticatedTemplate>
-        <SignInPage onSignIn={() => instance.loginRedirect({ scopes: [apiScope] })} />
-      </UnauthenticatedTemplate>
-    </>
+export default function App({ api, user, signInError, onSignIn, onSignOut }: Props) {
+  return user ? (
+    <FilmsPage api={api} userName={user.name} onSignOut={onSignOut} />
+  ) : (
+    <SignInPage onSignIn={onSignIn} initialError={signInError} />
   )
 }

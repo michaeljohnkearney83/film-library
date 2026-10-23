@@ -17,11 +17,12 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
 |---|---|
 | [api-spec/](api-spec/README.md) | **TypeSpec contract**: the single definition of the API, from which the OpenAPI and the React types are generated |
 | [src/FilmLibrary.Api/](src/FilmLibrary.Api/README.md) | ASP.NET Core minimal API; enforces the age limits; stores data in Cosmos DB |
-| [src/web/](src/web/README.md) | React + Vite + TypeScript front end, signing in with MSAL |
+| [src/web/](src/web/README.md) | React + Vite + TypeScript front end, signing in with OpenID Connect (oidc-client-ts) |
 | [tests/FilmLibrary.Api.Tests/](tests/FilmLibrary.Api.Tests/README.md) | API tests, contract tests and Cosmos DB integration tests |
 | [infra/](infra/README.md) | Bicep: App Service, Cosmos DB, Key Vault, Storage, managed identity, Static Web App, monitoring |
 | [pipelines/](pipelines/README.md) | Azure DevOps deploy template; the main pipeline is [azure-pipelines.yml](azure-pipelines.yml) |
 | [docs/entra-setup.md](docs/entra-setup.md) | One-off Microsoft Entra External ID setup |
+| [keycloak/](keycloak/README.md) | Optional local sign-in with Keycloak in Docker: realm, test users and the Film Library login theme |
 
 ## Prerequisites
 
@@ -33,13 +34,15 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
 ## Run locally
 
 ```powershell
-docker compose up -d                                   # Cosmos DB emulator on :8081
+docker compose up -d cosmos                            # Cosmos DB emulator on :8081
 dotnet run --project src/FilmLibrary.Api               # API on http://localhost:5080 (seeds sample films)
 cd src/web; copy public\config.example.json public\config.json   # fill in your Entra ids
 npm install; npm run dev                               # http://localhost:5173
 ```
 
 Fill in the Entra settings in `src/FilmLibrary.Api/appsettings.Development.json` (`Entra:Authority`, `Entra:Audience`) and in `src/web/public/config.json`.
+
+**Without Entra:** run Keycloak locally instead (`docker compose up -d`, then the API with `--launch-profile keycloak` and the web app with [keycloak/config.json](keycloak/config.json)). See [keycloak/README.md](keycloak/README.md). Azure environments always use Entra.
 
 ## Change the API
 

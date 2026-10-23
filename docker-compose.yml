@@ -1,8 +1,22 @@
-# Local Azure Cosmos DB emulator for development and the Cosmos integration tests.
-# Endpoint http://localhost:8081, Data Explorer http://localhost:1234
+# Local services for development.
+# - Cosmos DB emulator (also used by the Cosmos integration tests): http://localhost:8081, Data Explorer http://localhost:1234
+# - Keycloak, an optional local sign-in provider instead of Entra: http://localhost:8180 (admin console: admin / admin)
 services:
   cosmos:
     image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
     ports:
       - "8081:8081"
       - "1234:1234"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    # Dev mode: in-memory database, re-imports the realm on every start. Theme caching off so CSS edits show on refresh.
+    command: start-dev --import-realm --http-port=8180 --spi-theme--cache-themes=false --spi-theme--cache-templates=false
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8180"
+    volumes:
+      - ./keycloak/realm-filmlibrary.json:/opt/keycloak/data/import/realm-filmlibrary.json:ro
+      - ./keycloak/themes/filmlibrary:/opt/keycloak/themes/filmlibrary:ro

@@ -39,7 +39,7 @@ On Windows, `az.cmd` runs through `cmd`, which mangles `(`, `)` and `&` in Graph
    - *My APIs* → Film Library API → `Films.Read`
    - *Microsoft Graph* → delegated `openid` and `offline_access`
 3. **Grant admin consent** for all of them. External tenant users can't consent themselves.
-4. Note the **client id**. This is `entra.clientId` / `ENTRA_SPA_CLIENT_ID`.
+4. Note the **client id**. This is `auth.clientId` / `ENTRA_SPA_CLIENT_ID`.
 
 ## 3. Collect the date of birth (portal only)
 
@@ -118,8 +118,7 @@ Changes can take a few minutes to appear. The CSS only uses Microsoft's `.ext-*`
 
 | Where | Value |
 |---|---|
-| API `Entra:Authority` / `ENTRA_AUTHORITY` | `https://<name>.ciamlogin.com/<tenant-id>/v2.0` |
+| API `Entra:Authority` and web `auth.authority` / `ENTRA_AUTHORITY` | `https://<name>.ciamlogin.com/<tenant-id>/v2.0` (shared by both) |
 | API `Entra:Audience` / `ENTRA_API_CLIENT_ID` | API client id |
-| Web `entra.authority` / `ENTRA_SPA_AUTHORITY` | `https://<tenant-id>.ciamlogin.com/<tenant-id>` (tenant id, not the subdomain: MSAL rejects the subdomain form, see CLAUDE.md) |
-| Web `entra.clientId` / `ENTRA_SPA_CLIENT_ID` | SPA client id |
-| Web `entra.apiScope` / `ENTRA_API_SCOPE` | `api://<api-client-id>/Films.Read` |
+| Web `auth.clientId` / `ENTRA_SPA_CLIENT_ID` | SPA client id |
+| Web `auth.scope` / `ENTRA_API_SCOPE` | `offline_access api://<api-client-id>/Films.Read` (the pipeline adds `offline_access` to `ENTRA_API_SCOPE`) |

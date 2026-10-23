@@ -1,6 +1,6 @@
 # web (React front end)
 
-React + TypeScript + Vite. You sign in with Microsoft Entra External ID (MSAL), then browse films. The lock icon and the "You must be 15 or over…" message come from the API's answer; the app never decides access itself.
+React + TypeScript + Vite. You sign in through an OpenID Connect provider (Microsoft Entra External ID in Azure, or the local Keycloak), then browse films. The lock icon and the "You must be 15 or over…" message come from the API's answer; the app never decides access itself.
 
 ## Run
 
@@ -11,6 +11,8 @@ npm run dev                                           # http://localhost:5173
 ```
 
 The API must be running (see the [root README](../../README.md)), and `http://localhost:5173` must be a registered redirect URI on the SPA app registration ([docs/entra-setup.md](../../docs/entra-setup.md)).
+
+To sign in with the local Keycloak instead, copy [keycloak/config.json](../../keycloak/config.json) to `public/config.json` and see [keycloak/README.md](../../keycloak/README.md).
 
 ## Scripts
 
@@ -29,16 +31,16 @@ Settings are read at runtime from `/config.json`, so one build can be deployed t
 | Key | Meaning |
 |---|---|
 | `apiBaseUrl` | The API's address |
-| `entra.clientId` | SPA app registration client id |
-| `entra.authority` | `https://<tenant-id>.ciamlogin.com/<tenant-id>` (tenant id, not the subdomain) |
-| `entra.apiScope` | `api://<api-client-id>/Films.Read` |
+| `auth.authority` | The provider's OpenID Connect authority. Entra: `https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0`. Keycloak: `http://localhost:8180/realms/filmlibrary` |
+| `auth.clientId` | The React app's client id (Entra SPA app registration, or `film-library-web` in Keycloak) |
+| `auth.scope` | Scopes besides `openid profile`. Entra: `offline_access api://<api-client-id>/Films.Read`. Keycloak: `Films.Read` |
 
 ## Structure
 
 ```
-src/main.tsx               Loads config, creates MSAL and the API client, renders the app
+src/main.tsx               Loads config, finishes any sign-in redirect, creates the API client, renders the app
 src/App.tsx                Sign-in page or films page depending on whether you're signed in
-src/auth/msal.ts           MSAL setup; gets tokens silently and redirects only when it must
+src/auth/oidc.ts           oidc-client-ts: sign-in by redirect (code + PKCE), token renewal with the refresh token
 src/api/schema.d.ts        GENERATED from api-spec; don't edit
 src/api/client.ts          Typed API client; turns failures into ApiError and a 403 into "restricted"
 src/components/            FilmsPage, SignInPage, RatingBadge

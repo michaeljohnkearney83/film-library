@@ -1,0 +1,8 @@
+{
+  "apiBaseUrl": "http://localhost:5080",
+  "auth": {
+    "authority": "http://localhost:8180/realms/filmlibrary",
+    "clientId": "film-library-web",
+    "scope": "Films.Read"
+  }
+}

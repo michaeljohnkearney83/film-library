@@ -66,14 +66,16 @@ jobs:
                 echo "API health check failed"; exit 1
               displayName: Wait for API health check
 
+            # The React app and the API share one OpenID Connect authority (ENTRA_AUTHORITY).
+            # offline_access gets a refresh token, so the app can renew access tokens without a redirect.
             - script: |
                 cat > "$(Pipeline.Workspace)/web/config.json" <<EOF
                 {
                   "apiBaseUrl": "$(apiUrl)",
-                  "entra": {
+                  "auth": {
+                    "authority": "$(ENTRA_AUTHORITY)",
                     "clientId": "$(ENTRA_SPA_CLIENT_ID)",
-                    "authority": "$(ENTRA_SPA_AUTHORITY)",
-                    "apiScope": "$(ENTRA_API_SCOPE)"
+                    "scope": "offline_access $(ENTRA_API_SCOPE)"
                   }
                 }
                 EOF
