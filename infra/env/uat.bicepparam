@@ -8,3 +8,7 @@ param appServiceSku = 'B1'
 // From the pipeline's variable group (or set them in your shell before deploying by hand).
 param entraAuthority = readEnvironmentVariable('ENTRA_AUTHORITY')
 param entraApiClientId = readEnvironmentVariable('ENTRA_API_CLIENT_ID')
+
+// Observability: alerts are created only when ALERT_EMAIL is set (variable group, or your shell).
+param logsDailyCapGb = '0.5'
+param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')

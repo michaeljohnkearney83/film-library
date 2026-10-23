@@ -7,9 +7,11 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
         │  access token (Films.Read, birthdate claim)
         ▼
 .NET API (App Service) ──managed identity──▶ Cosmos DB · Key Vault · Storage
-        │
-        └──▶ Application Insights / Log Analytics
+
+React + API + Cosmos DB ──traces, metrics, logs──▶ Application Insights / Log Analytics
 ```
+
+Observability (what's collected, the dashboard, alerts and costs) is described in [docs/observability.md](docs/observability.md).
 
 ## Repository layout
 
@@ -22,6 +24,7 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
 | [infra/](infra/README.md) | Bicep: App Service, Cosmos DB, Key Vault, Storage, managed identity, Static Web App, monitoring |
 | [pipelines/](pipelines/README.md) | Azure DevOps deploy template; the main pipeline is [azure-pipelines.yml](azure-pipelines.yml) |
 | [docs/entra-setup.md](docs/entra-setup.md) | One-off Microsoft Entra External ID setup |
+| [docs/observability.md](docs/observability.md) | Telemetry from the browser, API and Cosmos DB; where to look in Azure; alerts; the local dashboard |
 | [keycloak/](keycloak/README.md) | Optional local sign-in with Keycloak in Docker: a shared `mediahub` realm for three apps (Film Library plus two examples), test users and login themes |
 
 ## Prerequisites
@@ -34,7 +37,7 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
 ## Run locally
 
 ```powershell
-docker compose up -d cosmos                            # Cosmos DB emulator on :8081
+docker compose up -d cosmos dashboard                  # Cosmos DB emulator on :8081; telemetry dashboard on :18888
 dotnet run --project src/FilmLibrary.Api               # API on http://localhost:5080 (seeds sample films)
 cd src/web; copy public\config.example.json public\config.json   # fill in your Entra ids
 npm install; npm run dev                               # http://localhost:5173

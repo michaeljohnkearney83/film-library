@@ -13,6 +13,12 @@ describe('loadConfig', () => {
     await expect(loadConfig(serve(200, valid))).resolves.toEqual(valid)
   })
 
+  it('passes optional telemetry settings through', async () => {
+    const withTelemetry = { ...valid, telemetry: { connectionString: 'InstrumentationKey=abc' } }
+
+    await expect(loadConfig(serve(200, withTelemetry))).resolves.toEqual(withTelemetry)
+  })
+
   it('says how to fix a missing config.json', async () => {
     await expect(loadConfig(serve(404, {}))).rejects.toThrow('Copy public/config.example.json to public/config.json.')
   })

@@ -34,6 +34,9 @@ Settings are read at runtime from `/config.json`, so one build can be deployed t
 | `auth.authority` | The provider's OpenID Connect authority. Entra: `https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0`. Keycloak: `http://localhost:8180/realms/mediahub` |
 | `auth.clientId` | The React app's client id (Entra SPA app registration, or `film-library-web` in Keycloak) |
 | `auth.scope` | Scopes besides `openid profile`. Entra: `offline_access api://<api-client-id>/Films.Read`. Keycloak: `Films.Read` |
+| `telemetry.connectionString` | Optional. Application Insights connection string; the pipeline writes it. Leave it out locally and nothing is sent, and the SDK isn't even downloaded |
+
+With telemetry on, the app reports page views, unhandled and render errors, failed sign-ins and its calls to the API. API calls carry a `traceparent` header, so they join the API's traces. It sends the signed-in user's opaque id (`sub`) but no names or emails, and sets no cookies. See [docs/observability.md](../../docs/observability.md).
 
 ## Structure
 
@@ -41,6 +44,7 @@ Settings are read at runtime from `/config.json`, so one build can be deployed t
 src/main.tsx               Loads config, finishes any sign-in redirect, creates the API client, renders the app
 src/App.tsx                Sign-in page or films page depending on whether you're signed in
 src/auth/oidc.ts           oidc-client-ts: sign-in by redirect (code + PKCE), token renewal with the refresh token
+src/telemetry.ts           Application Insights (loaded on demand when configured); a no-op otherwise
 src/api/schema.d.ts        GENERATED from api-spec; don't edit
 src/api/client.ts          Typed API client; turns failures into ApiError and a 403 into "restricted"
 src/components/            FilmsPage, SignInPage, RatingBadge

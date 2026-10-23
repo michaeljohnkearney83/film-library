@@ -42,9 +42,10 @@ jobs:
                     --name "filmlibrary-$(Build.BuildId)" \
                     --parameters "$(Pipeline.Workspace)/infra/env/${{ parameters.environment }}.bicepparam" \
                     --query properties.outputs --output json)
-                  for name in apiName apiUrl staticWebAppName webUrl; do
+                  for name in apiName apiUrl staticWebAppName webUrl appInsightsConnectionString; do
                     echo "##vso[task.setvariable variable=$name]$(echo "$outputs" | jq -r ".$name.value")"
                   done
+              # ALERT_EMAIL (optional) reaches the script on its own: non-secret variables become environment variables.
               env:
                 ENTRA_AUTHORITY: $(ENTRA_AUTHORITY)
                 ENTRA_API_CLIENT_ID: $(ENTRA_API_CLIENT_ID)
@@ -57,17 +58,19 @@ jobs:
                 appName: $(apiName)
                 package: $(Pipeline.Workspace)/api/api.zip
 
+            # Ready means the API has started and can read from Cosmos DB with its managed identity.
             - script: |
                 set -euo pipefail
                 for i in $(seq 1 30); do
-                  curl -sf "$(apiUrl)/healthz" && exit 0
+                  curl -sf "$(apiUrl)/healthz/ready" && exit 0
                   sleep 10
                 done
-                echo "API health check failed"; exit 1
-              displayName: Wait for API health check
+                echo "API readiness check failed"; exit 1
+              displayName: Wait until the API is ready
 
             # The React app and the API share one OpenID Connect authority (ENTRA_AUTHORITY).
             # offline_access gets a refresh token, so the app can renew access tokens without a redirect.
+            # telemetry sends the browser's page views, exceptions and API calls to the same Application Insights.
             - script: |
                 cat > "$(Pipeline.Workspace)/web/config.json" <<EOF
                 {
@@ -76,9 +79,13 @@ jobs:
                     "authority": "$(ENTRA_AUTHORITY)",
                     "clientId": "$(ENTRA_SPA_CLIENT_ID)",
                     "scope": "offline_access $(ENTRA_API_SCOPE)"
+                  },
+                  "telemetry": {
+                    "connectionString": "$(appInsightsConnectionString)"
                   }
                 }
                 EOF
+                jq -e . "$(Pipeline.Workspace)/web/config.json" > /dev/null # fail here, not in the browser, if it isn't valid JSON
               displayName: Write the React app's config.json
 
             - task: AzureCLI@2

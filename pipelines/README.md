@@ -5,7 +5,7 @@
 | Stage | Runs | Does |
 |---|---|---|
 | **Build** | Every PR and every push to `main` | Regenerates the TypeSpec output and fails if it isn't committed; builds and tests the API (with the Cosmos DB emulator); lints, tests and builds React; validates Bicep; publishes the `api`, `web` and `infra` artifacts |
-| **Dev** | `main` only | Deploys infrastructure, then the API (and waits for `/healthz`), then the React app with Dev's `config.json` |
+| **Dev** | `main` only | Deploys infrastructure, then the API (and waits for `/healthz/ready`, which reads from Cosmos DB), then the React app with Dev's `config.json` (including the Application Insights connection string) |
 | **UAT** | After Dev | Same, for UAT, **after approval** |
 | **Prod** | After UAT | Same, for Prod, **after approval**, then tags the commit `prod-<build number>` |
 
@@ -43,6 +43,7 @@ Create the environments (step 4) **before** the first run; otherwise the pipelin
    | `ENTRA_API_CLIENT_ID` | API app registration client id |
    | `ENTRA_SPA_CLIENT_ID` | SPA app registration client id |
    | `ENTRA_API_SCOPE` | `api://<api-client-id>/Films.Read` |
+   | `ALERT_EMAIL` | Optional. Where alerts are emailed. Without it, no alert rules are created; each rule has a small monthly charge ([docs/observability.md](../docs/observability.md)) |
 
    An older `ENTRA_SPA_AUTHORITY` variable is no longer used and can be deleted.
 

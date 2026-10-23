@@ -40,6 +40,9 @@ public static class CosmosSetup
             var clientOptions = new CosmosClientOptions
             {
                 ApplicationName = "FilmLibrary.Api",
+                // One span per Cosmos DB operation (source Azure.Cosmos.Operation), with request charge and status.
+                // In Azure the SDK uses direct TCP, so without these there'd be no sign of Cosmos DB in a trace.
+                CosmosClientTelemetryOptions = new() { DisableDistributedTracing = false },
                 UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
                 {
                     Converters = { new JsonStringEnumConverter() },

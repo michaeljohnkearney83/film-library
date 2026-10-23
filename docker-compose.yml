@@ -1,6 +1,7 @@
 # Local services for development.
 # - Cosmos DB emulator (also used by the Cosmos integration tests): http://localhost:8081, Data Explorer http://localhost:1234
 # - Keycloak, an optional local sign-in provider instead of Entra: http://localhost:8180 (admin console: admin / admin)
+# - Aspire dashboard, for the API's telemetry: http://localhost:18888
 services:
   cosmos:
     image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
@@ -22,3 +23,13 @@ services:
     volumes:
       - ./keycloak/realm-mediahub.json:/opt/keycloak/data/import/realm-mediahub.json:ro
       - ./keycloak/themes:/opt/keycloak/themes:ro
+
+  dashboard:
+    # The API's traces, metrics and logs while running locally (Azure uses Application Insights instead).
+    # The API's launch profiles send OTLP to localhost:4317. Data is kept in memory only.
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "18888:18888" # dashboard UI
+      - "4317:18889"  # OTLP (gRPC)

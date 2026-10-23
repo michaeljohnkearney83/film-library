@@ -1,0 +1,147 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Film Library\nRequests, age-restricted views, dependencies and errors for the React app (`FilmLibrary.Web`) and the API (`FilmLibrary.Api`). For a single request end to end, open **Transaction search** or **Failures** in Application Insights and select an operation."
+      },
+      "name": "intro"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "b6f1c3c2-6d8e-4a59-9a43-1f3f0c7b9f10",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "value": { "durationMs": 86400000 },
+            "typeSettings": {
+              "selectableValues": [
+                { "durationMs": 3600000 },
+                { "durationMs": 14400000 },
+                { "durationMs": 86400000 },
+                { "durationMs": 259200000 },
+                { "durationMs": 604800000 },
+                { "durationMs": 2592000000 }
+              ]
+            }
+          }
+        ]
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests\n| summarize Requests = count(), Failed = countif(success == false) by bin(timestamp, {TimeRange:grain})",
+        "size": 0,
+        "title": "API requests and failures (5xx)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "timechart"
+      },
+      "customWidth": "50",
+      "name": "requests"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "customMetrics\n| where name == 'filmlibrary.film.views'\n| extend Outcome = tostring(customDimensions['outcome']), Rating = tostring(customDimensions['film.rating'])\n| summarize Views = sum(valueSum) by Rating, Outcome\n| order by Rating asc",
+        "size": 0,
+        "title": "Film views by rating and outcome (age_restricted = refused for age)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "barchart",
+        "chartSettings": { "xAxis": "Rating", "group": "Outcome", "createOtherGroup": null }
+      },
+      "customWidth": "50",
+      "name": "film-views"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests\n| summarize Requests = count(), Failed = countif(success == false), P50ms = round(percentile(duration, 50)), P95ms = round(percentile(duration, 95)) by Operation = operation_Name\n| order by Requests desc",
+        "size": 0,
+        "title": "API operations",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "operations"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "dependencies\n| where cloud_RoleName == 'FilmLibrary.Api'\n| summarize Calls = count(), Failed = countif(success == false), P95ms = round(percentile(duration, 95)) by Type = type, Target = target, Name = name\n| order by Calls desc\n| take 20",
+        "size": 0,
+        "title": "API dependencies (Cosmos DB, sign-in provider metadata)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "dependencies"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "pageViews\n| summarize PageViews = count(), AvgLoadMs = round(avg(duration)) by bin(timestamp, {TimeRange:grain})",
+        "size": 0,
+        "title": "Browser page views and load time",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "timechart"
+      },
+      "customWidth": "50",
+      "name": "page-views"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "dependencies\n| where cloud_RoleName == 'FilmLibrary.Web'\n| summarize Calls = count(), Failed = countif(success == false), P95ms = round(percentile(duration, 95)) by Target = target, Name = name, ResultCode = resultCode\n| order by Calls desc\n| take 20",
+        "size": 0,
+        "title": "Calls from the browser (as users experienced them)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "browser-calls"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "exceptions\n| summarize Count = count(), LastSeen = max(timestamp) by Role = cloud_RoleName, Type = type, Message = outermostMessage\n| order by LastSeen desc",
+        "size": 0,
+        "title": "Exceptions (browser and API)",
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "table"
+      },
+      "name": "exceptions"
+    }
+  ],
+  "fallbackResourceIds": [],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

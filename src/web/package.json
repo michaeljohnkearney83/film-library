@@ -12,6 +12,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@microsoft/applicationinsights-web": "^3.4.5",
     "oidc-client-ts": "^3.5.0",
     "openapi-fetch": "^0.17.0",
     "react": "^19.3.1",

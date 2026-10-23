@@ -19,7 +19,8 @@ In Development, the API connects to the emulator, creates the `filmlibrary` data
 |---|---|---|
 | `GET /api/films` | `Films.Read` | Every film, each with `canView` for the caller |
 | `GET /api/films/{id}` | `Films.Read` | Film details; **403** problem details if the caller is too young; **404** if there's no such film |
-| `GET /healthz` | none | `Healthy` (used by App Service's health check) |
+| `GET /healthz` | none | `Healthy` if the process is up (App Service's health check) |
+| `GET /healthz/ready` | none | `Healthy` if it can also read from Cosmos DB; **503** `Unhealthy` if not. The pipeline waits for it after deploying |
 
 A missing token gets **401**; a token without the `Films.Read` scope gets **403**.
 
@@ -48,9 +49,14 @@ A missing or invalid birthdate means U and PG only. The logic is in `Films/Ratin
 | `Cosmos:ManagedIdentityClientId` | User-assigned identity used in Azure; if empty, `DefaultAzureCredential` is used (e.g. `az login`) |
 | `Cosmos:SeedSampleData` | Seed sample films into an empty container |
 | `Cors:AllowedOrigins` | The React app's origin(s) |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Turns on Application Insights; set from Key Vault in Azure |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Sends telemetry to Application Insights; set from Key Vault in Azure |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Without Application Insights, sends telemetry over OTLP instead. The launch profiles set `http://localhost:4317`, the Aspire dashboard from docker-compose |
 
 In Azure, Bicep sets all of these as App Service settings ([infra/main.bicep](../../infra/main.bicep)).
+
+## Telemetry
+
+OpenTelemetry collects requests, logs, exceptions, outgoing HTTP, a span per Cosmos DB operation (with its RU charge), and the `filmlibrary.film.views` metric (by outcome and rating). It never records the birthdate or age. Locally, run `docker compose up -d dashboard` and open http://localhost:18888. See [docs/observability.md](../../docs/observability.md).
 
 ## Structure
 
@@ -59,4 +65,5 @@ Program.cs          Wiring: auth, Cosmos DB, CORS, OpenAPI, telemetry, endpoints
 Auth/EntraAuth.cs   JWT bearer (any OpenID Connect provider; Entra in Azure) and the Films.Read scope policy
 Data/Cosmos.cs      Cosmos client (key for the emulator, managed identity in Azure) and the sample-data seeder
 Films/              Rating, age rules, the repository, endpoints and sample data
+Observability/      OpenTelemetry setup, the film-views metric and the Cosmos DB readiness check
 ```

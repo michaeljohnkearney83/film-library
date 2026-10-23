@@ -4,13 +4,14 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 
 ## Layout
 
-`api-spec/` (TypeSpec contract) · `src/FilmLibrary.Api/` (minimal API) · `src/web/` (React + Vite + TS) · `tests/FilmLibrary.Api.Tests/` · `infra/` (Bicep) · `azure-pipelines.yml` + `pipelines/` · `docs/entra-setup.md` · `keycloak/` (optional local sign-in)
+`api-spec/` (TypeSpec contract) · `src/FilmLibrary.Api/` (minimal API) · `src/web/` (React + Vite + TS) · `tests/FilmLibrary.Api.Tests/` · `infra/` (Bicep) · `azure-pipelines.yml` + `pipelines/` · `docs/entra-setup.md` · `docs/observability.md` · `keycloak/` (optional local sign-in)
 
 ## Commands
 
 - Contract: `npm run build` in `api-spec` regenerates `api-spec/generated/openapi.json` **and** `src/web/src/api/schema.d.ts`.
 - API: `dotnet run --project src/FilmLibrary.Api` (http://localhost:5080); `dotnet test FilmLibrary.slnx`.
 - Local Keycloak instead of Entra: `docker compose up -d`, `dotnet run --project src/FilmLibrary.Api --launch-profile keycloak`, copy `keycloak/config.json` to `src/web/public/config.json` (see `keycloak/README.md`).
+- Local telemetry: `docker compose up -d dashboard` (Aspire dashboard, http://localhost:18888); the API's launch profiles send OTLP to `localhost:4317`.
 - Cosmos emulator: `docker compose up -d cosmos`; set `COSMOS_EMULATOR_ENDPOINT=http://localhost:8081/` to run the Cosmos integration tests (they're skipped otherwise).
 - Web: in `src/web`: `npm run dev`, `npm test`, `npm run lint`, `npm run build` (runs `tsc -b`).
 - Bicep: `az bicep build --file infra/main.bicep` (or a standalone `bicep build`).
@@ -36,6 +37,7 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 - **Failures become messages.** .NET services and `client.ts` turn network errors, timeouts and unreadable replies into one error type (`ApiError` in React). UI code shows them and never crashes. Requests the user cancelled (`AbortError`) are not errors.
 - **React async state.** Effects use an `AbortController`. Replies for a film the viewer has moved away from are ignored, and a test guards this. Don't call `setState` synchronously in an effect (the oxlint rule); derive state during render or set it in the event handler.
 - **Release flow.** Trunk-based: short-lived branch per user story → PR into `main` → one build promoted Dev → UAT → Prod (approvals on UAT and Prod). No environment branches; environments are `dev`, `uat` and `prod` everywhere (Bicep params, pipeline, variable groups). See `pipelines/README.md`.
+- **Observability.** OpenTelemetry in the API (`Observability/TelemetrySetup.cs`): Azure Monitor when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set, otherwise OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set, otherwise nothing. Business metrics go through `FilmMetrics` (`IMeterFactory`; tests use `MetricCollector`). Never put a birthdate, age, name or email in telemetry, and keep high-cardinality values (film id) on traces, not metric dimensions. The browser uses `src/telemetry.ts` (Application Insights JS, loaded on demand, no cookies, `traceparent` sent only to the API host); without `telemetry` in `config.json` it's a no-op. `/healthz` = alive, `/healthz/ready` = Cosmos DB answers (the pipeline waits for it). Alerts exist only when `ALERT_EMAIL` is set. See `docs/observability.md`.
 - **Runtime config.** The web build is environment-agnostic; `/config.json` is written per environment by the pipeline. Never bake environment URLs into the bundle.
 
 ## Gotchas
@@ -45,6 +47,9 @@ React + .NET 10 film library on Azure, with age-restricted content by UK BBFC ra
 - The Cosmos SDK is configured with System.Text.Json, but it **still loads Newtonsoft.Json at runtime**, so the API must reference it. Don't remove it: the test project pulls Newtonsoft in on its own, which hid this once, and `DeploymentDependencyTests` now guards it. `Rating` is serialized as certificate text through `JsonStringEnumMemberName`.
 - Static Web Apps only exist in a few regions, and West Europe refuses new (e.g. free-trial) subscriptions with `RequestDisallowedByAzure`, so `staticWebAppLocation` defaults to `eastus2`. The site is served from the global edge either way. Check a region with `az deployment group validate` before a run.
 - App Service quota differs by region per subscription: the current free-trial subscription has none in UK South, so Dev and UAT set `location = 'ukwest'` in their `.bicepparam` (the resource groups themselves stay in UK South; that's only metadata). `az deployment group validate` reports `SubscriptionIsOverQuotaForSku` once `Microsoft.Web` is registered. Cosmos DB capacity is separate and only shows up at creation (`ServiceUnavailable`, "high demand"): UK West refused it, so `cosmosLocation = 'uksouth'`. A Cosmos account can't change region; a failed one must be deleted before retrying elsewhere.
+- Cosmos DB spans need `CosmosClientTelemetryOptions.DisableDistributedTracing = false` set explicitly (`Data/Cosmos.cs`); with only the `Azure.Experimental.EnableActivitySource` switch there were none. Locally the emulator uses gateway mode, so HTTP spans appear even without them; in Azure (direct TCP) Cosmos DB would be invisible.
+- After adding an npm dependency, restart `npm run dev`: a running Vite server answers the new package with 504 "Outdated Optimize Dep" (the app then runs without telemetry rather than failing).
+- Log Analytics has a daily cap in Dev and UAT (`logsDailyCapGb`); once reached, telemetry stops until the next day's reset.
 - With managed identity, the API can't create Cosmos databases or containers; Bicep creates them. The seeder only creates them when using the emulator key.
 - MSAL was replaced by `oidc-client-ts` because MSAL refuses any non-https authority (no localhost exception), so it can't use a local Keycloak; MSAL's issuer check also forced the tenant-id form of the Entra authority. With `oidc-client-ts`, the web app and API share one authority, `https://<subdomain>.ciamlogin.com/<tenant-id>/v2.0` (`ENTRA_AUTHORITY`), and the login page shows the readable subdomain.
 - Keycloak (docker-compose) runs on port 8180, because 8080 is often taken. Its realm `mediahub` (`keycloak/realm-mediahub.json`) serves three apps; Film Library is one client. Realm changes need `docker compose up -d --force-recreate keycloak`; a restart keeps the old realm. The `Films.Read` client scope adds a hard-coded `scp` claim, the `film-library-api` audience and `birthdate`, so tokens match Entra's shape. The `birthdate` user-profile attribute is only shown and required when `Films.Read` is requested. The API's `keycloak` launch profile sets `Entra:RequireHttpsMetadata=false`.

@@ -8,3 +8,7 @@ param appServiceSku = 'F1' // free tier: no always-on, 60 CPU minutes a day, col
 // From the pipeline's variable group (or set them in your shell before deploying by hand).
 param entraAuthority = readEnvironmentVariable('ENTRA_AUTHORITY')
 param entraApiClientId = readEnvironmentVariable('ENTRA_API_CLIENT_ID')
+
+// Observability: alerts are created only when ALERT_EMAIL is set (variable group, or your shell).
+param logsDailyCapGb = '0.15' // about 4.5 GB a month, inside Log Analytics' 5 GB monthly free allowance
+param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')

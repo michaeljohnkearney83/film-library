@@ -14,6 +14,11 @@ export interface AppConfig {
     /** Scopes to request besides openid and profile: the API scope, plus offline_access on Entra for refresh tokens. */
     scope: string
   }
+  /** Optional. Application Insights for the browser; written by the pipeline in Azure, usually left out locally. */
+  telemetry?: {
+    /** Application Insights connection string. It only allows sending telemetry, so it's safe in the browser. */
+    connectionString: string
+  }
 }
 
 export async function loadConfig(fetchImpl: typeof fetch = fetch): Promise<AppConfig> {

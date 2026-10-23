@@ -10,7 +10,12 @@
 | Key Vault (RBAC) | Holds the Application Insights connection string, read by the API through a Key Vault reference |
 | Storage account | Reserved for assets such as posters; shared-key access disabled |
 | Static Web App (Free) | The React app |
-| Log Analytics + Application Insights | Telemetry, plus diagnostic settings for the API, Cosmos DB and Key Vault |
+| Log Analytics + Application Insights | Telemetry from the browser and the API, plus diagnostic settings for the API, Cosmos DB and Key Vault. Daily ingestion cap per environment (`logsDailyCapGb`) |
+| Workbook *Film Library (<env>)* | The dashboard, from [workbook.json](workbook.json) |
+| Action group + metric alerts | Only when `alertEmail` is set (from `ALERT_EMAIL`): API 5xx, slow API, browser exceptions, Cosmos DB throttling |
+| Availability tests | Only with `enableAvailabilityTests` (Prod): web home page and API `/healthz/ready` from three regions |
+
+See [docs/observability.md](../docs/observability.md) for what each one shows and what it costs.
 
 ## Deploy by hand
 

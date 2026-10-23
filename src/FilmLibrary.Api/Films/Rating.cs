@@ -16,6 +16,18 @@ public enum Rating
 
 public static class BbfcRating
 {
+    /// <summary>The certificate as printed, e.g. "12A": the same text the API's JSON uses.</summary>
+    public static string Certificate(Rating rating) => rating switch
+    {
+        Rating.U => "U",
+        Rating.PG => "PG",
+        Rating.TwelveA => "12A",
+        Rating.Twelve => "12",
+        Rating.Fifteen => "15",
+        Rating.Eighteen => "18",
+        _ => throw new ArgumentOutOfRangeException(nameof(rating), rating, "Unknown BBFC rating."),
+    };
+
     public static int MinimumAge(Rating rating) => rating switch
     {
         Rating.U or Rating.PG => 0,

@@ -28,6 +28,15 @@ param birthdateClaim string = 'birthdate'
 @description('App Service plan SKU for the API.')
 param appServiceSku string = 'B1'
 
+@description('Daily Log Analytics ingestion cap in GB, as text (e.g. \'0.15\'); \'-1\' means no cap. Ingestion stops for the rest of the day once it is reached.')
+param logsDailyCapGb string = '-1'
+
+@description('Email address for alerts. Empty creates no alerts (each alert rule has a small monthly charge).')
+param alertEmail string = ''
+
+@description('Probe the web app and API from several Azure regions every 15 minutes. Charged per test run.')
+param enableAvailabilityTests bool = false
+
 var suffix = take(uniqueString(resourceGroup().id, environmentName), 6)
 var tags = {
   app: 'film-library'
@@ -58,6 +67,7 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   properties: {
     sku: { name: 'PerGB2018' }
     retentionInDays: 30
+    workspaceCapping: { dailyQuotaGb: json(logsDailyCapGb) }
   }
 }
 
@@ -279,9 +289,177 @@ resource keyVaultDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
   }
 }
 
+// ---------------------------------------------------------------------------
+// Dashboard, availability tests and alerts
+// ---------------------------------------------------------------------------
+resource workbook 'Microsoft.Insights/workbooks@2023-06-01' = {
+  name: guid(resourceGroup().id, 'filmlibrary-overview')
+  location: location
+  tags: tags
+  kind: 'shared'
+  properties: {
+    displayName: 'Film Library (${environmentName})'
+    category: 'workbook'
+    sourceId: appInsights.id
+    serializedData: loadTextContent('workbook.json')
+  }
+}
+
+// The web app's home page, and the API's readiness check (which reads from Cosmos DB).
+var availabilityTargets = ['web', 'api']
+
+resource availabilityTests 'Microsoft.Insights/webtests@2022-06-15' = [
+  for target in availabilityTargets: if (enableAvailabilityTests) {
+    name: 'avail-filmlib-${target}-${environmentName}'
+    location: location
+    // Links the test to Application Insights, where its results appear under Availability.
+    tags: union(tags, { 'hidden-link:${appInsights.id}': 'Resource' })
+    kind: 'standard'
+    properties: {
+      SyntheticMonitorId: 'avail-filmlib-${target}-${environmentName}'
+      Name: 'Film Library ${target} (${environmentName})'
+      Kind: 'standard'
+      Enabled: true
+      Frequency: 900
+      Timeout: 30
+      RetryEnabled: true
+      // The ids are historical and don't match the names: UK South, UK West, North Europe.
+      Locations: [{ Id: 'emea-ru-msa-edge' }, { Id: 'emea-se-sto-edge' }, { Id: 'emea-gb-db3-azr' }]
+      Request: {
+        RequestUrl: target == 'web' ? 'https://${staticWebApp.properties.defaultHostname}/' : 'https://${api.properties.defaultHostName}/healthz/ready'
+        HttpVerb: 'GET'
+        ParseDependentRequests: false
+      }
+      ValidationRules: { ExpectedHttpStatusCode: 200, SSLCheck: true, SSLCertRemainingLifetimeCheck: 7 }
+    }
+  }
+]
+
+var alertsEnabled = !empty(alertEmail)
+
+resource alertEmailGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (alertsEnabled) {
+  name: 'ag-filmlib-${environmentName}'
+  location: 'global'
+  tags: tags
+  properties: {
+    groupShortName: 'filmlib-${take(environmentName, 4)}'
+    enabled: true
+    emailReceivers: [{ name: 'team', emailAddress: alertEmail, useCommonAlertSchema: true }]
+  }
+}
+
+// Metric alerts over the last 15 minutes, checked every 5.
+var metricAlerts = [
+  {
+    name: 'api-server-errors'
+    description: 'The API returned 5xx responses (App Service front end, so it also fires when the app can\'t start).'
+    severity: 1
+    scope: api.id
+    metricNamespace: 'Microsoft.Web/sites'
+    metricName: 'Http5xx'
+    timeAggregation: 'Total'
+    operator: 'GreaterThan'
+    threshold: 5
+    dimensions: []
+  }
+  {
+    name: 'api-slow'
+    description: 'API requests averaged over 2 seconds.'
+    severity: 3
+    scope: appInsights.id
+    metricNamespace: 'microsoft.insights/components'
+    metricName: 'requests/duration'
+    timeAggregation: 'Average'
+    operator: 'GreaterThan'
+    threshold: 2000
+    dimensions: []
+  }
+  {
+    name: 'browser-exceptions'
+    description: 'The React app reported unhandled exceptions or failed sign-ins.'
+    severity: 2
+    scope: appInsights.id
+    metricNamespace: 'microsoft.insights/components'
+    metricName: 'exceptions/browser'
+    timeAggregation: 'Count'
+    operator: 'GreaterThan'
+    threshold: 5
+    dimensions: []
+  }
+  {
+    name: 'cosmos-throttled'
+    description: 'Cosmos DB throttled requests (429).'
+    severity: 2
+    scope: cosmos.id
+    metricNamespace: 'Microsoft.DocumentDB/databaseAccounts'
+    metricName: 'TotalRequests'
+    timeAggregation: 'Count'
+    operator: 'GreaterThan'
+    threshold: 0
+    dimensions: [{ name: 'StatusCode', operator: 'Include', values: ['429'] }]
+  }
+]
+
+resource alerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
+  for alert in metricAlerts: if (alertsEnabled) {
+    name: 'alert-filmlib-${alert.name}-${environmentName}'
+    location: 'global'
+    tags: tags
+    properties: {
+      description: alert.description
+      severity: alert.severity
+      enabled: true
+      scopes: [alert.scope]
+      evaluationFrequency: 'PT5M'
+      windowSize: 'PT15M'
+      criteria: {
+        'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+        allOf: [
+          {
+            criterionType: 'StaticThresholdCriterion'
+            name: alert.name
+            metricNamespace: alert.metricNamespace
+            metricName: alert.metricName
+            timeAggregation: alert.timeAggregation
+            operator: alert.operator
+            threshold: alert.threshold
+            dimensions: alert.dimensions
+          }
+        ]
+      }
+      actions: [{ actionGroupId: alertEmailGroup.id }]
+    }
+  }
+]
+
+resource availabilityAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
+  for (target, i) in availabilityTargets: if (alertsEnabled && enableAvailabilityTests) {
+    name: 'alert-filmlib-${target}-down-${environmentName}'
+    location: 'global'
+    tags: union(tags, { 'hidden-link:${availabilityTests[i].id}': 'Resource', 'hidden-link:${appInsights.id}': 'Resource' })
+    properties: {
+      description: 'Film Library ${target} failed its availability test from 2 or more regions.'
+      severity: 1
+      enabled: true
+      scopes: [availabilityTests[i].id, appInsights.id]
+      evaluationFrequency: 'PT5M'
+      windowSize: 'PT15M'
+      criteria: {
+        'odata.type': 'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria'
+        webTestId: availabilityTests[i].id
+        componentId: appInsights.id
+        failedLocationCount: 2
+      }
+      actions: [{ actionGroupId: alertEmailGroup.id }]
+    }
+  }
+]
+
 output apiName string = api.name
 output apiUrl string = 'https://${api.properties.defaultHostName}'
 output staticWebAppName string = staticWebApp.name
 output webUrl string = 'https://${staticWebApp.properties.defaultHostname}'
 output cosmosEndpoint string = cosmos.properties.documentEndpoint
 output keyVaultName string = keyVault.name
+// Ingestion-only, and the browser needs it in config.json, so it isn't treated as a secret.
+output appInsightsConnectionString string = appInsights.properties.ConnectionString

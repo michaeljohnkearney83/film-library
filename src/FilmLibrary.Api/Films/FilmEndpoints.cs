@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FilmLibrary.Api.Auth;
+using FilmLibrary.Api.Observability;
 using Microsoft.Extensions.Options;
 
 namespace FilmLibrary.Api.Films;
@@ -24,17 +25,26 @@ public static class FilmEndpoints
             .WithName("listFilms")
             .Produces<List<FilmSummary>>();
 
-        films.MapGet("{id}", async (string id, ClaimsPrincipal user, IFilmRepository repository, TimeProvider clock, IOptions<EntraOptions> entra, CancellationToken cancellationToken) =>
+        films.MapGet("{id}", async (string id, ClaimsPrincipal user, IFilmRepository repository, TimeProvider clock, IOptions<EntraOptions> entra, FilmMetrics metrics, CancellationToken cancellationToken) =>
             {
-                if (await repository.FindAsync(id, cancellationToken) is not { } film)
-                    return Results.NotFound();
+                var age = Viewer.Age(user, clock, entra.Value.BirthdateClaim);
 
-                if (!Viewer.CanView(Viewer.Age(user, clock, entra.Value.BirthdateClaim), film.Rating))
+                if (await repository.FindAsync(id, cancellationToken) is not { } film)
+                {
+                    metrics.FilmViewed(id, FilmViewOutcome.NotFound, null, age is not null);
+                    return Results.NotFound();
+                }
+
+                if (!Viewer.CanView(age, film.Rating))
+                {
+                    metrics.FilmViewed(id, FilmViewOutcome.AgeRestricted, film.Rating, age is not null);
                     return Results.Problem(
                         statusCode: StatusCodes.Status403Forbidden,
                         title: "Age restricted",
                         detail: $"You must be {BbfcRating.MinimumAge(film.Rating)} or over to view this film.");
+                }
 
+                metrics.FilmViewed(id, FilmViewOutcome.Shown, film.Rating, age is not null);
                 return Results.Ok(new FilmDetails(film.Id, film.Title, film.Year, film.Genre, film.Rating, film.Director, film.Synopsis));
             })
             .WithName("getFilm")
