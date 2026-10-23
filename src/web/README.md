@@ -31,7 +31,7 @@ Settings are read at runtime from `/config.json`, so one build can be deployed t
 | Key | Meaning |
 |---|---|
 | `apiBaseUrl` | The API's address |
-| `auth.authority` | The provider's OpenID Connect authority. Entra: `https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0`. Keycloak: `http://localhost:8180/realms/filmlibrary` |
+| `auth.authority` | The provider's OpenID Connect authority. Entra: `https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0`. Keycloak: `http://localhost:8180/realms/mediahub` |
 | `auth.clientId` | The React app's client id (Entra SPA app registration, or `film-library-web` in Keycloak) |
 | `auth.scope` | Scopes besides `openid profile`. Entra: `offline_access api://<api-client-id>/Films.Read`. Keycloak: `Films.Read` |
 

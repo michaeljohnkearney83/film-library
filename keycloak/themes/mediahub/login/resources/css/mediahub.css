@@ -1,0 +1,87 @@
+/*
+ * MediaHub base login styles, layered over keycloak.v2's PatternFly 5 styles.
+ * Colours are variables so app themes (themes/filmlibrary) can restyle by overriding --hub-* only.
+ */
+:root {
+  --hub-bg: #f4f5f7;
+  --hub-surface: #ffffff;
+  --hub-text: #1c1c22;
+  --hub-muted: #5d5d6b;
+  --hub-border: #e2e2e8;
+  --hub-accent: #334155;
+  --hub-accent-hover: #1e293b;
+  --hub-bar: #334155;
+
+  --pf-v5-global--primary-color--100: var(--hub-accent);
+  --pf-v5-global--primary-color--200: var(--hub-accent-hover);
+  --pf-v5-global--link--Color: var(--hub-accent);
+  --pf-v5-global--link--Color--hover: var(--hub-accent-hover);
+  --pf-v5-global--FontFamily--text: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --pf-v5-global--FontFamily--heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --pf-v5-global--Color--100: var(--hub-text);
+  --pf-v5-global--Color--200: var(--hub-muted);
+}
+
+html.login-pf,
+.login-pf body,
+.pf-v5-c-login {
+  background: var(--hub-bg) !important;
+  background-image: none !important;
+}
+
+/* Coloured bar across the top. */
+.pf-v5-c-login::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 56px;
+  background: var(--hub-bar);
+}
+
+/* Realm name above the card ("MediaHub"); app themes swap it for a logo. keycloak.v2 makes it white uppercase. */
+#kc-header,
+#kc-header-wrapper {
+  color: var(--hub-text) !important;
+  text-transform: none !important;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* The card. keycloak.v2 puts a thick PatternFly-blue line on top of the card header; drop it. */
+.pf-v5-c-login__main-header {
+  border-top: none;
+}
+
+.pf-v5-c-login__main {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 28, 34, 0.08);
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+
+.pf-v5-c-form-control {
+  border-radius: 6px;
+}
+
+.pf-v5-c-form-control:focus-within {
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--hub-accent);
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.pf-v5-c-login__main-footer-band {
+  border-top: 1px solid var(--hub-border);
+  background: var(--hub-bg);
+  border-radius: 0 0 12px 12px;
+}

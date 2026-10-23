@@ -17,7 +17,7 @@
       "applicationUrl": "http://localhost:5080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "Entra__Authority": "http://localhost:8180/realms/filmlibrary",
+        "Entra__Authority": "http://localhost:8180/realms/mediahub",
         "Entra__Audience": "film-library-api",
         "Entra__RequireHttpsMetadata": "false"
       }

@@ -10,7 +10,9 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.4.0
-    # Dev mode: in-memory database, re-imports the realm on every start. Theme caching off so CSS edits show on refresh.
+    # Dev mode: H2 database inside the container (kept across restarts, lost when the container is recreated).
+    # The realm is imported only if it doesn't exist yet: after editing it, run `docker compose up -d --force-recreate keycloak`.
+    # Theme caching is off, so CSS edits show on refresh.
     command: start-dev --import-realm --http-port=8180 --spi-theme--cache-themes=false --spi-theme--cache-templates=false
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
@@ -18,5 +20,5 @@ services:
     ports:
       - "8180:8180"
     volumes:
-      - ./keycloak/realm-filmlibrary.json:/opt/keycloak/data/import/realm-filmlibrary.json:ro
-      - ./keycloak/themes/filmlibrary:/opt/keycloak/themes/filmlibrary:ro
+      - ./keycloak/realm-mediahub.json:/opt/keycloak/data/import/realm-mediahub.json:ro
+      - ./keycloak/themes:/opt/keycloak/themes:ro

@@ -6,7 +6,7 @@ export interface AppConfig {
   auth: {
     /**
      * The provider's authority (its metadata is at <authority>/.well-known/openid-configuration), e.g.
-     * Entra: https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0 · Keycloak: http://localhost:8180/realms/filmlibrary
+     * Entra: https://<tenant-subdomain>.ciamlogin.com/<tenant-id>/v2.0 · Keycloak: http://localhost:8180/realms/mediahub
      */
     authority: string
     /** The React app's client id at the provider. */

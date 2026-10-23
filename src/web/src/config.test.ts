@@ -3,7 +3,7 @@ import { loadConfig } from './config'
 
 const valid = {
   apiBaseUrl: 'http://localhost:5080',
-  auth: { authority: 'http://localhost:8180/realms/filmlibrary', clientId: 'film-library-web', scope: 'Films.Read' },
+  auth: { authority: 'http://localhost:8180/realms/mediahub', clientId: 'film-library-web', scope: 'Films.Read' },
 }
 
 const serve = (status: number, body: unknown) => async () => new Response(JSON.stringify(body), { status })

@@ -42,7 +42,7 @@ public class AuthSetupTests
     {
         var options = BearerOptions(new()
         {
-            ["Entra:Authority"] = "http://localhost:8180/realms/filmlibrary",
+            ["Entra:Authority"] = "http://localhost:8180/realms/mediahub",
             ["Entra:RequireHttpsMetadata"] = "false",
         });
 

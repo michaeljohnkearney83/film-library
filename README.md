@@ -22,7 +22,7 @@ React (Static Web Apps) ──sign in──▶ Entra External ID
 | [infra/](infra/README.md) | Bicep: App Service, Cosmos DB, Key Vault, Storage, managed identity, Static Web App, monitoring |
 | [pipelines/](pipelines/README.md) | Azure DevOps deploy template; the main pipeline is [azure-pipelines.yml](azure-pipelines.yml) |
 | [docs/entra-setup.md](docs/entra-setup.md) | One-off Microsoft Entra External ID setup |
-| [keycloak/](keycloak/README.md) | Optional local sign-in with Keycloak in Docker: realm, test users and the Film Library login theme |
+| [keycloak/](keycloak/README.md) | Optional local sign-in with Keycloak in Docker: a shared `mediahub` realm for three apps (Film Library plus two examples), test users and login themes |
 
 ## Prerequisites
 
