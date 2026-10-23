@@ -97,6 +97,21 @@ Sign up through the app, or create users with Microsoft Graph (`POST https://gra
 
 Many sign-ins in quick succession can trigger Entra's throttling; wait a few minutes if the password page stops appearing.
 
+## 6. Brand the sign-in page (portal)
+
+The sign-in page stays Microsoft-hosted (passwords never reach the app), but is styled to match it. Graph's branding API doesn't support personal Microsoft accounts, so do this in the portal: *Company branding* → *Default sign-in* → *Edit*.
+
+| Tab | Setting | Value |
+|---|---|---|
+| Basics | Page background color | `#F6F6F8` |
+| Layout | Template | Full-screen background |
+| Layout | Show header / Show footer | On / On |
+| Layout | Custom CSS | upload [branding/sign-in.css](branding/sign-in.css) |
+| Sign-in form | Username hint text | `Email address` |
+| Sign-in form | Sign-in page text | `Films are shown according to your age and their UK BBFC rating.` |
+
+Changes can take a few minutes to appear. The CSS only uses Microsoft's documented `.ext-*` classes; colours mirror `src/web/src/index.css`.
+
 ## Settings
 
 | Where | Value |

@@ -1,0 +1,72 @@
+/*
+ * Custom CSS for the Entra External ID sign-in page, so it matches the React app (src/web/src/index.css).
+ * Upload in Entra admin center → Company branding → Default sign-in → Layout → Custom CSS (max 25 KB).
+ * Only Microsoft's documented .ext-* classes are supported; see docs/entra-setup.md step 6.
+ */
+
+body,
+.ext-background-image {
+  background: #f6f6f8;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ext-header {
+  background: #3b5bdb;
+}
+
+.ext-sign-in-box {
+  background: #ffffff;
+  border: 1px solid #e2e2e8;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 28, 34, 0.08);
+}
+
+.ext-title {
+  color: #1c1c22;
+  font-weight: 600;
+}
+
+.ext-subtitle,
+.ext-boilerplate-text {
+  color: #5d5d6b;
+}
+
+.ext-input.ext-text-box {
+  border: 1px solid #e2e2e8;
+  border-radius: 6px;
+}
+
+.ext-input.ext-text-box:focus {
+  border-color: #3b5bdb;
+  outline: 2px solid #3b5bdb;
+  outline-offset: 1px;
+}
+
+.ext-button.ext-primary {
+  background: #3b5bdb;
+  border-color: #3b5bdb;
+  color: #ffffff;
+  border-radius: 6px;
+}
+
+.ext-button.ext-primary:hover,
+.ext-button.ext-primary:focus {
+  background: #2f4ac0;
+  border-color: #2f4ac0;
+}
+
+.ext-button.ext-secondary {
+  background: #f6f6f8;
+  border: 1px solid #e2e2e8;
+  color: #1c1c22;
+  border-radius: 6px;
+}
+
+.ext-error {
+  color: #b42318;
+}
+
+a,
+.ext-footer-links a {
+  color: #3b5bdb;
+}
