@@ -13,6 +13,28 @@ React + API + Cosmos DB ──traces, metrics, logs──▶ Application Insight
 
 Observability (what's collected, the dashboard, alerts and costs) is described in [docs/observability.md](docs/observability.md).
 
+## Quick reference (Dev)
+
+| What | Where |
+|---|---|
+| Film Library (hosted Dev, Entra sign-in) | https://black-cliff-0b67e610f.2.azurestaticapps.net |
+| Film Library API (hosted Dev) | https://app-filmlib-api-dev-jevska.azurewebsites.net/ |
+| Film Library (local, Keycloak sign-in) | http://localhost:5173 |
+| Keycloak admin console (local, `admin` / `admin`) | http://localhost:8180/admin |
+| Telemetry dashboard (local) | http://localhost:18888 |
+| Application Insights (Dev) | https://portal.azure.com/#resource/subscriptions/<subscription-id>/resourceGroups/rg-filmlib-dev/providers/Microsoft.Insights/components/appi-filmlib-dev/overview |
+| Workbooks, including *Film Library (dev)* | https://portal.azure.com/#resource/subscriptions/<subscription-id>/resourceGroups/rg-filmlib-dev/providers/Microsoft.Insights/components/appi-filmlib-dev/workbooks |
+
+Sign in to the Azure portal with the tenant's admin account. The personal account that owns the subscription is blocked from the portal by security defaults (AADSTS530035), though the Azure CLI still works with it.
+
+**Test users.** The same three users exist in Entra (hosted) and Keycloak (local). The Keycloak passwords are below; the Entra passwords are kept outside the repository.
+
+| Email | Keycloak password (local) | Age | Can't open |
+|---|---|---|---|
+| `chloe@example.com` | `Film-local-chloe1!` | 12 | 15 and 18 films |
+| `ben@example.com` | `Film-local-ben1!` | 16 | 18 films |
+| `alice@example.com` | `Film-local-alice1!` | 36 | Nothing |
+
 ## Repository layout
 
 | Folder | What it is |
